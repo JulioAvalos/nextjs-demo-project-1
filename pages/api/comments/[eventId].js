@@ -25,7 +25,7 @@ function handler(req, res) {
 
     res.status(200).json({
       messsage: "Success!",
-      data: newComment,
+      comment: newComment,
     });
   }
 
