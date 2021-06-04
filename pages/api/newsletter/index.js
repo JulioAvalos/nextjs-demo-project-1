@@ -1,5 +1,18 @@
 import { MongoClient } from "mongodb";
 
+async function connectDatabase() {
+  const client = await MongoClient.connect(
+    `mongodb+srv://${process.env.USERNAME_DB}:${process.env.PASSWORD_DB}@cluster0.nmhiv.mongodb.net/newsletter?retryWrites=true&w=majority`
+  );
+  return client;
+}
+
+async function insertDocument(client, document) {
+  const db = client.db();
+
+  await db.collection("emails").insertOne(document);
+}
+
 async function handler(req, res) {
   if (req.method === "POST") {
     const userMail = req.body.email;
@@ -7,20 +20,25 @@ async function handler(req, res) {
       res.status(422).json({ messsage: "invalid email address." });
       return;
     }
-    const client = await MongoClient.connect(
-      `mongodb+srv://${process.env.USERNAME_DB}:${process.env.PASSWORD_DB}@cluster0.nmhiv.mongodb.net/newsletter?retryWrites=true&w=majority`
-    );
 
-    const db = client.db();
+    let client;
 
-    await db.collection("emails").insertOne({ email: userMail });
+    try {
+      client = await connectDatabase();
+    } catch (error) {
+      res.status(500).json({message: 'Connecting to the database failed!'});
+      return;
+    }
 
-    client.close();
-
+    try {
+      await insertDocument(client, { email: userMail });
+      client.close();
+    } catch (error) {
+      res.status(500).json({message: 'Inserting data failed!'});
+      return;
+    }
     res.status(201).json({ messsage: "Signed up!" });
-  } else {
-    res.status(200).json({ messsage: "OK" });
-  }
+  } 
 }
 
 export default handler;
