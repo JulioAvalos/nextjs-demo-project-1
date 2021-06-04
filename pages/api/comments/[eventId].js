@@ -44,27 +44,18 @@ async function handler(req, res) {
   }
 
   if (req.method === "GET") {
-    const dummyList = [
-      {
-        id: 1,
-        comment: "Believe in the heart of the cards",
-        user: "Yami Yugi",
-      },
-      {
-        id: 2,
-        comment: "YAAAY!",
-        user: "Dark Magician Girl",
-      },
-      {
-        id: 3,
-        comment: "*dragon intensed roar*",
-        user: "Blue Eyes White Dragon",
-      },
-    ];
-    
+
+    const db = client.db();
+
+    const documents = await db
+      .collection('comments')
+      .find()
+      .sort({_id: -1})
+      .toArray();
+  
     res.status(200).json({
       messsage: "OK",
-      comments: dummyList,
+      comments: documents,
     });
   }
 
